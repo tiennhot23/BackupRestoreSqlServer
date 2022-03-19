@@ -22,12 +22,13 @@ namespace BackupRestoreSqlServer
         public static String mlogin = "sa";
         public static String password = "123";
         public static String databaseName = "";
+        public static String deviceName = "";
 
         // đường dẫn mặc định nếu muốn sửa thì sẽ không được--> cần chỉnh sủa code 
         // sao cho khi đổi máy vẫn có thể chạy được
         // Mặc định sẽ mở đường dẫn này, khi tạo device kiểm tra đường dẫn có tồn tại hay không
         // Nếu tồn tại thì lưu trong đường dẫn,  ngược lại mở folder cho người dùng chọn đường dẫn để lưu
-        public static String defaultPath = "E:/VisualStudio-workspace/BackupRestoreSqlServer/Backup_Restore_DB/";
+        public static String defaultPath = "E:/Chuyen_de_cnpm_backup-restore/BackupRestoreSqlServer/Backup_Restore_DB/";
 
         public static int KetNoi()
         {
@@ -66,8 +67,8 @@ namespace BackupRestoreSqlServer
             }
             catch (SqlException ex)
             {
-                MessageBox.Show(errStr + "\n" + ex.Message);
                 conn.Close();
+                MessageBox.Show(errStr + "\n" + ex.Message);
                 return ex.State;
             }
         }
@@ -92,19 +93,6 @@ namespace BackupRestoreSqlServer
             }
         }
 
-        public static DataTable ExecSqlDataTable(String cmd)
-        {
-            // Trả về datable
-            DataTable dt = new DataTable();
-            //Nếu đang đóng thì mở
-            if (conn.State == ConnectionState.Closed) conn.Open();
-            // Muốn gọi csdl phải thông qua SqlDataAdapter
-            SqlDataAdapter da = new SqlDataAdapter(cmd, conn);
-            // Chạy lệnh cmd
-            da.Fill(dt);
-            conn.Close();
-            return dt;
-        }
 
         [STAThread]
         static void Main()

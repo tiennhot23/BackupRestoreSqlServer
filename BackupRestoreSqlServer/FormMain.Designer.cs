@@ -32,13 +32,13 @@ namespace BackupRestoreSqlServer
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
             this.barManager1 = new DevExpress.XtraBars.BarManager(this.components);
-            this.bar1 = new DevExpress.XtraBars.Bar();
-            this.btnSaoLuu = new DevExpress.XtraBars.BarButtonItem();
-            this.btnPhucHoi = new DevExpress.XtraBars.BarButtonItem();
-            this.cbThamSoTheoTg = new DevExpress.XtraBars.BarCheckItem();
-            this.btnTaoDeviceSaoLuu = new DevExpress.XtraBars.BarButtonItem();
-            this.btnXoaBackup = new DevExpress.XtraBars.BarButtonItem();
-            this.btnDangXuat = new DevExpress.XtraBars.BarButtonItem();
+            this.menuBar = new DevExpress.XtraBars.Bar();
+            this.btnBackup = new DevExpress.XtraBars.BarButtonItem();
+            this.btnRestore = new DevExpress.XtraBars.BarButtonItem();
+            this.cbTime = new DevExpress.XtraBars.BarCheckItem();
+            this.btnCreateBackupDevice = new DevExpress.XtraBars.BarButtonItem();
+            this.btnDelBackup = new DevExpress.XtraBars.BarButtonItem();
+            this.btnLogout = new DevExpress.XtraBars.BarButtonItem();
             this.btnThoat = new DevExpress.XtraBars.BarButtonItem();
             this.bar3 = new DevExpress.XtraBars.Bar();
             this.barDockControlTop = new DevExpress.XtraBars.BarDockControl();
@@ -54,18 +54,18 @@ namespace BackupRestoreSqlServer
             this.databasesTableAdapter = new BackupRestoreSqlServer.DSTableAdapters.databasesTableAdapter();
             this.tableAdapterManager = new BackupRestoreSqlServer.DSTableAdapters.TableAdapterManager();
             this.groupControl2 = new DevExpress.XtraEditors.GroupControl();
-            this.lbSoBanSaoLuu = new DevExpress.XtraEditors.LabelControl();
+            this.lblBackupNum = new DevExpress.XtraEditors.LabelControl();
             this.labelControl1 = new DevExpress.XtraEditors.LabelControl();
-            this.lbTenDatabase = new DevExpress.XtraEditors.LabelControl();
+            this.lblDatabaseName = new DevExpress.XtraEditors.LabelControl();
             this.groupControl3 = new DevExpress.XtraEditors.GroupControl();
-            this.progress = new System.Windows.Forms.ProgressBar();
+            this.progressBar = new System.Windows.Forms.ProgressBar();
             this.cbDelAll = new System.Windows.Forms.CheckBox();
-            this.gcDatetime = new DevExpress.XtraEditors.GroupControl();
+            this.groupDatetime = new DevExpress.XtraEditors.GroupControl();
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
             this.timeStop = new DevExpress.XtraEditors.TimeEdit();
             this.dateStop = new DevExpress.XtraEditors.DateEdit();
             this.label1 = new System.Windows.Forms.Label();
-            this.sP_STT_BACKUPGridControl = new DevExpress.XtraGrid.GridControl();
+            this.STTBACKUPGridControl = new DevExpress.XtraGrid.GridControl();
             this.bdsSPSttBackup = new System.Windows.Forms.BindingSource(this.components);
             this.gridView2 = new DevExpress.XtraGrid.Views.Grid.GridView();
             this.colposition = new DevExpress.XtraGrid.Columns.GridColumn();
@@ -75,6 +75,9 @@ namespace BackupRestoreSqlServer
             this.tbAdapterSttBackup = new BackupRestoreSqlServer.DSTableAdapters.SP_STT_BACKUPTableAdapter();
             this.bdsBackupDevice = new System.Windows.Forms.BindingSource(this.components);
             this.tbAdapterBackupDevice = new BackupRestoreSqlServer.DSTableAdapters.backup_devicesTableAdapter();
+            this.behaviorManager1 = new DevExpress.Utils.Behaviors.BehaviorManager(this.components);
+            this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            this.doSqlWork = new System.ComponentModel.BackgroundWorker();
             ((System.ComponentModel.ISupportInitialize)(this.barManager1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dS)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.groupControl1)).BeginInit();
@@ -86,21 +89,22 @@ namespace BackupRestoreSqlServer
             this.groupControl2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.groupControl3)).BeginInit();
             this.groupControl3.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.gcDatetime)).BeginInit();
-            this.gcDatetime.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.groupDatetime)).BeginInit();
+            this.groupDatetime.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.timeStop.Properties)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dateStop.Properties.CalendarTimeProperties)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dateStop.Properties)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.sP_STT_BACKUPGridControl)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.STTBACKUPGridControl)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bdsSPSttBackup)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridView2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bdsBackupDevice)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.behaviorManager1)).BeginInit();
             this.SuspendLayout();
             // 
             // barManager1
             // 
             this.barManager1.Bars.AddRange(new DevExpress.XtraBars.Bar[] {
-            this.bar1,
+            this.menuBar,
             this.bar3});
             this.barManager1.DockControls.Add(this.barDockControlTop);
             this.barManager1.DockControls.Add(this.barDockControlBottom);
@@ -108,76 +112,76 @@ namespace BackupRestoreSqlServer
             this.barManager1.DockControls.Add(this.barDockControlRight);
             this.barManager1.Form = this;
             this.barManager1.Items.AddRange(new DevExpress.XtraBars.BarItem[] {
-            this.btnSaoLuu,
-            this.btnPhucHoi,
-            this.cbThamSoTheoTg,
-            this.btnTaoDeviceSaoLuu,
-            this.btnDangXuat,
+            this.btnBackup,
+            this.btnRestore,
+            this.cbTime,
+            this.btnCreateBackupDevice,
+            this.btnLogout,
             this.btnThoat,
-            this.btnXoaBackup});
+            this.btnDelBackup});
             this.barManager1.MaxItemId = 7;
             this.barManager1.StatusBar = this.bar3;
             // 
-            // bar1
+            // menuBar
             // 
-            this.bar1.BarName = "Tools";
-            this.bar1.DockCol = 0;
-            this.bar1.DockRow = 0;
-            this.bar1.DockStyle = DevExpress.XtraBars.BarDockStyle.Top;
-            this.bar1.FloatLocation = new System.Drawing.Point(258, 135);
-            this.bar1.LinksPersistInfo.AddRange(new DevExpress.XtraBars.LinkPersistInfo[] {
-            new DevExpress.XtraBars.LinkPersistInfo(this.btnSaoLuu),
-            new DevExpress.XtraBars.LinkPersistInfo(this.btnPhucHoi),
-            new DevExpress.XtraBars.LinkPersistInfo(this.cbThamSoTheoTg),
-            new DevExpress.XtraBars.LinkPersistInfo(this.btnTaoDeviceSaoLuu),
-            new DevExpress.XtraBars.LinkPersistInfo(this.btnXoaBackup),
-            new DevExpress.XtraBars.LinkPersistInfo(this.btnDangXuat),
+            this.menuBar.BarName = "Tools";
+            this.menuBar.DockCol = 0;
+            this.menuBar.DockRow = 0;
+            this.menuBar.DockStyle = DevExpress.XtraBars.BarDockStyle.Top;
+            this.menuBar.FloatLocation = new System.Drawing.Point(258, 135);
+            this.menuBar.LinksPersistInfo.AddRange(new DevExpress.XtraBars.LinkPersistInfo[] {
+            new DevExpress.XtraBars.LinkPersistInfo(this.btnBackup),
+            new DevExpress.XtraBars.LinkPersistInfo(this.btnRestore),
+            new DevExpress.XtraBars.LinkPersistInfo(this.cbTime),
+            new DevExpress.XtraBars.LinkPersistInfo(this.btnCreateBackupDevice),
+            new DevExpress.XtraBars.LinkPersistInfo(this.btnDelBackup),
+            new DevExpress.XtraBars.LinkPersistInfo(this.btnLogout),
             new DevExpress.XtraBars.LinkPersistInfo(this.btnThoat)});
-            this.bar1.Text = "Tools";
+            this.menuBar.Text = "Tools";
             // 
-            // btnSaoLuu
+            // btnBackup
             // 
-            this.btnSaoLuu.Caption = "Sao lưu";
-            this.btnSaoLuu.Id = 0;
-            this.btnSaoLuu.Name = "btnSaoLuu";
-            this.btnSaoLuu.ItemClick += new DevExpress.XtraBars.ItemClickEventHandler(this.btnSaoLuu_ItemClick);
+            this.btnBackup.Caption = "Sao lưu";
+            this.btnBackup.Id = 0;
+            this.btnBackup.Name = "btnBackup";
+            this.btnBackup.ItemClick += new DevExpress.XtraBars.ItemClickEventHandler(this.btnBackup_ItemClick);
             // 
-            // btnPhucHoi
+            // btnRestore
             // 
-            this.btnPhucHoi.Caption = "Phục hồi";
-            this.btnPhucHoi.Id = 1;
-            this.btnPhucHoi.Name = "btnPhucHoi";
-            this.btnPhucHoi.ItemClick += new DevExpress.XtraBars.ItemClickEventHandler(this.btnPhucHoi_ItemClick);
+            this.btnRestore.Caption = "Phục hồi";
+            this.btnRestore.Id = 1;
+            this.btnRestore.Name = "btnRestore";
+            this.btnRestore.ItemClick += new DevExpress.XtraBars.ItemClickEventHandler(this.btnRestore_ItemClick);
             // 
-            // cbThamSoTheoTg
+            // cbTime
             // 
-            this.cbThamSoTheoTg.Caption = "Tham số theo thời gian";
-            this.cbThamSoTheoTg.CheckBoxVisibility = DevExpress.XtraBars.CheckBoxVisibility.BeforeText;
-            this.cbThamSoTheoTg.Id = 2;
-            this.cbThamSoTheoTg.Name = "cbThamSoTheoTg";
-            this.cbThamSoTheoTg.CheckedChanged += new DevExpress.XtraBars.ItemClickEventHandler(this.cbThamSoTheoTg_CheckedChanged);
+            this.cbTime.Caption = "Tham số theo thời gian";
+            this.cbTime.CheckBoxVisibility = DevExpress.XtraBars.CheckBoxVisibility.BeforeText;
+            this.cbTime.Id = 2;
+            this.cbTime.Name = "cbTime";
+            this.cbTime.CheckedChanged += new DevExpress.XtraBars.ItemClickEventHandler(this.cbTime_CheckedChanged);
             // 
-            // btnTaoDeviceSaoLuu
+            // btnCreateBackupDevice
             // 
-            this.btnTaoDeviceSaoLuu.Caption = "Tạo device sao lưu";
-            this.btnTaoDeviceSaoLuu.Id = 3;
-            this.btnTaoDeviceSaoLuu.Name = "btnTaoDeviceSaoLuu";
-            this.btnTaoDeviceSaoLuu.ItemClick += new DevExpress.XtraBars.ItemClickEventHandler(this.btnTaoDeviceSaoLuu_ItemClick);
+            this.btnCreateBackupDevice.Caption = "Tạo device sao lưu";
+            this.btnCreateBackupDevice.Id = 3;
+            this.btnCreateBackupDevice.Name = "btnCreateBackupDevice";
+            this.btnCreateBackupDevice.ItemClick += new DevExpress.XtraBars.ItemClickEventHandler(this.btnCreateBackupDevice_ItemClick);
             // 
-            // btnXoaBackup
+            // btnDelBackup
             // 
-            this.btnXoaBackup.Caption = "Xóa backup";
-            this.btnXoaBackup.Enabled = false;
-            this.btnXoaBackup.Id = 6;
-            this.btnXoaBackup.Name = "btnXoaBackup";
-            this.btnXoaBackup.ItemClick += new DevExpress.XtraBars.ItemClickEventHandler(this.btnXoaBackup_ItemClick);
+            this.btnDelBackup.Caption = "Xóa backup";
+            this.btnDelBackup.Enabled = false;
+            this.btnDelBackup.Id = 6;
+            this.btnDelBackup.Name = "btnDelBackup";
+            this.btnDelBackup.ItemClick += new DevExpress.XtraBars.ItemClickEventHandler(this.btnDelBackup_ItemClick);
             // 
-            // btnDangXuat
+            // btnLogout
             // 
-            this.btnDangXuat.Caption = "Đăng xuất";
-            this.btnDangXuat.Id = 4;
-            this.btnDangXuat.Name = "btnDangXuat";
-            this.btnDangXuat.ItemClick += new DevExpress.XtraBars.ItemClickEventHandler(this.btnDangXuat_ItemClick);
+            this.btnLogout.Caption = "Đăng xuất";
+            this.btnLogout.Id = 4;
+            this.btnLogout.Name = "btnLogout";
+            this.btnLogout.ItemClick += new DevExpress.XtraBars.ItemClickEventHandler(this.btnLogout_ItemClick);
             // 
             // btnThoat
             // 
@@ -296,12 +300,12 @@ namespace BackupRestoreSqlServer
             // 
             // groupControl2
             // 
-            this.groupControl2.Controls.Add(this.lbSoBanSaoLuu);
+            this.groupControl2.Controls.Add(this.lblBackupNum);
             this.groupControl2.Controls.Add(this.labelControl1);
-            this.groupControl2.Controls.Add(this.lbTenDatabase);
+            this.groupControl2.Controls.Add(this.lblDatabaseName);
             this.groupControl2.Controls.Add(this.groupControl3);
-            this.groupControl2.Controls.Add(this.gcDatetime);
-            this.groupControl2.Controls.Add(this.sP_STT_BACKUPGridControl);
+            this.groupControl2.Controls.Add(this.groupDatetime);
+            this.groupControl2.Controls.Add(this.STTBACKUPGridControl);
             this.groupControl2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupControl2.Location = new System.Drawing.Point(230, 20);
             this.groupControl2.Name = "groupControl2";
@@ -309,33 +313,33 @@ namespace BackupRestoreSqlServer
             this.groupControl2.TabIndex = 7;
             this.groupControl2.Text = "Tên cơ sở dữ liệu";
             // 
-            // lbSoBanSaoLuu
+            // lblBackupNum
             // 
-            this.lbSoBanSaoLuu.Location = new System.Drawing.Point(408, 5);
-            this.lbSoBanSaoLuu.Name = "lbSoBanSaoLuu";
-            this.lbSoBanSaoLuu.Size = new System.Drawing.Size(6, 13);
-            this.lbSoBanSaoLuu.TabIndex = 5;
-            this.lbSoBanSaoLuu.Text = "0";
+            this.lblBackupNum.Location = new System.Drawing.Point(408, 5);
+            this.lblBackupNum.Name = "lblBackupNum";
+            this.lblBackupNum.Size = new System.Drawing.Size(6, 13);
+            this.lblBackupNum.TabIndex = 5;
+            this.lblBackupNum.Text = "0";
             // 
             // labelControl1
             // 
-            this.labelControl1.Location = new System.Drawing.Point(330, 5);
+            this.labelControl1.Location = new System.Drawing.Point(326, 5);
             this.labelControl1.Name = "labelControl1";
-            this.labelControl1.Size = new System.Drawing.Size(71, 13);
+            this.labelControl1.Size = new System.Drawing.Size(76, 13);
             this.labelControl1.TabIndex = 4;
-            this.labelControl1.Text = "Số bản sao lưu";
+            this.labelControl1.Text = "Bản sao lưu thứ";
             // 
-            // lbTenDatabase
+            // lblDatabaseName
             // 
-            this.lbTenDatabase.Location = new System.Drawing.Point(126, 5);
-            this.lbTenDatabase.Name = "lbTenDatabase";
-            this.lbTenDatabase.Size = new System.Drawing.Size(74, 13);
-            this.lbTenDatabase.TabIndex = 3;
-            this.lbTenDatabase.Text = "TÊN DATABASE";
+            this.lblDatabaseName.Location = new System.Drawing.Point(126, 5);
+            this.lblDatabaseName.Name = "lblDatabaseName";
+            this.lblDatabaseName.Size = new System.Drawing.Size(74, 13);
+            this.lblDatabaseName.TabIndex = 3;
+            this.lblDatabaseName.Text = "TÊN DATABASE";
             // 
             // groupControl3
             // 
-            this.groupControl3.Controls.Add(this.progress);
+            this.groupControl3.Controls.Add(this.progressBar);
             this.groupControl3.Controls.Add(this.cbDelAll);
             this.groupControl3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupControl3.Location = new System.Drawing.Point(2, 274);
@@ -343,12 +347,12 @@ namespace BackupRestoreSqlServer
             this.groupControl3.Size = new System.Drawing.Size(764, 148);
             this.groupControl3.TabIndex = 2;
             // 
-            // progress
+            // progressBar
             // 
-            this.progress.Location = new System.Drawing.Point(124, 93);
-            this.progress.Name = "progress";
-            this.progress.Size = new System.Drawing.Size(517, 23);
-            this.progress.TabIndex = 1;
+            this.progressBar.Location = new System.Drawing.Point(124, 93);
+            this.progressBar.Name = "progressBar";
+            this.progressBar.Size = new System.Drawing.Size(517, 23);
+            this.progressBar.TabIndex = 1;
             // 
             // cbDelAll
             // 
@@ -360,17 +364,17 @@ namespace BackupRestoreSqlServer
             this.cbDelAll.Text = "Xóa tất cả bản sao lưu trong file trước khi sao lưu bản mới";
             this.cbDelAll.UseVisualStyleBackColor = true;
             // 
-            // gcDatetime
+            // groupDatetime
             // 
-            this.gcDatetime.Controls.Add(this.richTextBox1);
-            this.gcDatetime.Controls.Add(this.timeStop);
-            this.gcDatetime.Controls.Add(this.dateStop);
-            this.gcDatetime.Controls.Add(this.label1);
-            this.gcDatetime.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.gcDatetime.Location = new System.Drawing.Point(2, 422);
-            this.gcDatetime.Name = "gcDatetime";
-            this.gcDatetime.Size = new System.Drawing.Size(764, 204);
-            this.gcDatetime.TabIndex = 1;
+            this.groupDatetime.Controls.Add(this.richTextBox1);
+            this.groupDatetime.Controls.Add(this.timeStop);
+            this.groupDatetime.Controls.Add(this.dateStop);
+            this.groupDatetime.Controls.Add(this.label1);
+            this.groupDatetime.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.groupDatetime.Location = new System.Drawing.Point(2, 422);
+            this.groupDatetime.Name = "groupDatetime";
+            this.groupDatetime.Size = new System.Drawing.Size(764, 204);
+            this.groupDatetime.TabIndex = 1;
             // 
             // richTextBox1
             // 
@@ -401,6 +405,8 @@ namespace BackupRestoreSqlServer
             new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo)});
             this.dateStop.Properties.CalendarTimeProperties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] {
             new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo)});
+            this.dateStop.Properties.DisplayFormat.FormatString = "dd/MM/yyyy";
+            this.dateStop.Properties.DisplayFormat.FormatType = DevExpress.Utils.FormatType.DateTime;
             this.dateStop.Size = new System.Drawing.Size(161, 20);
             this.dateStop.TabIndex = 1;
             // 
@@ -413,19 +419,19 @@ namespace BackupRestoreSqlServer
             this.label1.TabIndex = 0;
             this.label1.Text = "Ngày giờ để phục hồi tới thời điểm đó";
             // 
-            // sP_STT_BACKUPGridControl
+            // STTBACKUPGridControl
             // 
-            this.sP_STT_BACKUPGridControl.DataSource = this.bdsSPSttBackup;
-            this.sP_STT_BACKUPGridControl.Dock = System.Windows.Forms.DockStyle.Top;
-            this.sP_STT_BACKUPGridControl.Location = new System.Drawing.Point(2, 23);
-            this.sP_STT_BACKUPGridControl.MainView = this.gridView2;
-            this.sP_STT_BACKUPGridControl.MenuManager = this.barManager1;
-            this.sP_STT_BACKUPGridControl.Name = "sP_STT_BACKUPGridControl";
-            this.sP_STT_BACKUPGridControl.Size = new System.Drawing.Size(764, 251);
-            this.sP_STT_BACKUPGridControl.TabIndex = 0;
-            this.sP_STT_BACKUPGridControl.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] {
+            this.STTBACKUPGridControl.DataSource = this.bdsSPSttBackup;
+            this.STTBACKUPGridControl.Dock = System.Windows.Forms.DockStyle.Top;
+            this.STTBACKUPGridControl.Location = new System.Drawing.Point(2, 23);
+            this.STTBACKUPGridControl.MainView = this.gridView2;
+            this.STTBACKUPGridControl.MenuManager = this.barManager1;
+            this.STTBACKUPGridControl.Name = "STTBACKUPGridControl";
+            this.STTBACKUPGridControl.Size = new System.Drawing.Size(764, 251);
+            this.STTBACKUPGridControl.TabIndex = 0;
+            this.STTBACKUPGridControl.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] {
             this.gridView2});
-            this.sP_STT_BACKUPGridControl.Click += new System.EventHandler(this.sP_STT_BACKUPGridControl_Click);
+            this.STTBACKUPGridControl.Click += new System.EventHandler(this.STTBACKUPGridControl_Click);
             // 
             // bdsSPSttBackup
             // 
@@ -439,7 +445,7 @@ namespace BackupRestoreSqlServer
             this.colname1,
             this.colbackup_start_date,
             this.coluser_name});
-            this.gridView2.GridControl = this.sP_STT_BACKUPGridControl;
+            this.gridView2.GridControl = this.STTBACKUPGridControl;
             this.gridView2.Name = "gridView2";
             this.gridView2.OptionsBehavior.Editable = false;
             // 
@@ -462,10 +468,10 @@ namespace BackupRestoreSqlServer
             // colbackup_start_date
             // 
             this.colbackup_start_date.Caption = "Ngày giờ sao lưu";
-            this.colbackup_start_date.DisplayFormat.FormatString = "dd/MM/yyyy hh:mm tt";
+            this.colbackup_start_date.DisplayFormat.FormatString = "dd/MM/yyyy hh:mm:ss tt";
             this.colbackup_start_date.DisplayFormat.FormatType = DevExpress.Utils.FormatType.DateTime;
             this.colbackup_start_date.FieldName = "backup_start_date";
-            this.colbackup_start_date.GroupFormat.FormatString = "dd/MM/yyyy hh:mm tt";
+            this.colbackup_start_date.GroupFormat.FormatString = "dd/MM/yyyy hh:mm:ss tt";
             this.colbackup_start_date.GroupFormat.FormatType = DevExpress.Utils.FormatType.DateTime;
             this.colbackup_start_date.Name = "colbackup_start_date";
             this.colbackup_start_date.Visible = true;
@@ -492,8 +498,18 @@ namespace BackupRestoreSqlServer
             // 
             this.tbAdapterBackupDevice.ClearBeforeFill = true;
             // 
+            // backgroundWorker1
+            // 
+            this.backgroundWorker1.WorkerReportsProgress = true;
+            this.backgroundWorker1.WorkerSupportsCancellation = true;
+            this.backgroundWorker1.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker1_DoWork);
+            this.backgroundWorker1.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.backgroundWorker1_ProgressChanged);
+            this.backgroundWorker1.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorker1_RunWorkerCompleted);
+            // 
             // FormMain
             // 
+            this.Appearance.BackColor = System.Drawing.Color.White;
+            this.Appearance.Options.UseBackColor = true;
             this.Appearance.Options.UseFont = true;
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -523,16 +539,17 @@ namespace BackupRestoreSqlServer
             ((System.ComponentModel.ISupportInitialize)(this.groupControl3)).EndInit();
             this.groupControl3.ResumeLayout(false);
             this.groupControl3.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.gcDatetime)).EndInit();
-            this.gcDatetime.ResumeLayout(false);
-            this.gcDatetime.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.groupDatetime)).EndInit();
+            this.groupDatetime.ResumeLayout(false);
+            this.groupDatetime.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.timeStop.Properties)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dateStop.Properties.CalendarTimeProperties)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dateStop.Properties)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.sP_STT_BACKUPGridControl)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.STTBACKUPGridControl)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bdsSPSttBackup)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridView2)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bdsBackupDevice)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.behaviorManager1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -541,17 +558,17 @@ namespace BackupRestoreSqlServer
         #endregion
 
         private DevExpress.XtraBars.BarManager barManager1;
-        private DevExpress.XtraBars.Bar bar1;
+        private DevExpress.XtraBars.Bar menuBar;
         private DevExpress.XtraBars.Bar bar3;
         private DevExpress.XtraBars.BarDockControl barDockControlTop;
         private DevExpress.XtraBars.BarDockControl barDockControlBottom;
         private DevExpress.XtraBars.BarDockControl barDockControlLeft;
         private DevExpress.XtraBars.BarDockControl barDockControlRight;
-        private DevExpress.XtraBars.BarButtonItem btnSaoLuu;
-        private DevExpress.XtraBars.BarButtonItem btnPhucHoi;
-        private DevExpress.XtraBars.BarCheckItem cbThamSoTheoTg;
-        private DevExpress.XtraBars.BarButtonItem btnTaoDeviceSaoLuu;
-        private DevExpress.XtraBars.BarButtonItem btnDangXuat;
+        private DevExpress.XtraBars.BarButtonItem btnBackup;
+        private DevExpress.XtraBars.BarButtonItem btnRestore;
+        private DevExpress.XtraBars.BarCheckItem cbTime;
+        private DevExpress.XtraBars.BarButtonItem btnCreateBackupDevice;
+        private DevExpress.XtraBars.BarButtonItem btnLogout;
         private DevExpress.XtraBars.BarButtonItem btnThoat;
         private DS dS;
         private System.Windows.Forms.BindingSource bdsDatabases;
@@ -564,9 +581,9 @@ namespace BackupRestoreSqlServer
         private DevExpress.XtraEditors.GroupControl groupControl2;
         private System.Windows.Forms.BindingSource bdsSPSttBackup;
         private DSTableAdapters.SP_STT_BACKUPTableAdapter tbAdapterSttBackup;
-        private DevExpress.XtraGrid.GridControl sP_STT_BACKUPGridControl;
+        private DevExpress.XtraGrid.GridControl STTBACKUPGridControl;
         private DevExpress.XtraGrid.Views.Grid.GridView gridView2;
-        private DevExpress.XtraEditors.GroupControl gcDatetime;
+        private DevExpress.XtraEditors.GroupControl groupDatetime;
         private System.Windows.Forms.RichTextBox richTextBox1;
         private System.Windows.Forms.CheckBox cbDelAll;
         private DevExpress.XtraEditors.TimeEdit timeStop;
@@ -578,11 +595,14 @@ namespace BackupRestoreSqlServer
         private DevExpress.XtraGrid.Columns.GridColumn coluser_name;
         private System.Windows.Forms.BindingSource bdsBackupDevice;
         private DSTableAdapters.backup_devicesTableAdapter tbAdapterBackupDevice;
-        private System.Windows.Forms.ProgressBar progress;
+        private System.Windows.Forms.ProgressBar progressBar;
         private DevExpress.XtraEditors.GroupControl groupControl3;
-        private DevExpress.XtraEditors.LabelControl lbTenDatabase;
-        private DevExpress.XtraEditors.LabelControl lbSoBanSaoLuu;
+        private DevExpress.XtraEditors.LabelControl lblDatabaseName;
+        private DevExpress.XtraEditors.LabelControl lblBackupNum;
         private DevExpress.XtraEditors.LabelControl labelControl1;
-        private DevExpress.XtraBars.BarButtonItem btnXoaBackup;
+        private DevExpress.XtraBars.BarButtonItem btnDelBackup;
+        private DevExpress.Utils.Behaviors.BehaviorManager behaviorManager1;
+        public System.ComponentModel.BackgroundWorker doSqlWork;
+        private System.ComponentModel.BackgroundWorker backgroundWorker1;
     }
 }

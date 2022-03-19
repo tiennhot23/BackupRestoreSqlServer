@@ -40,26 +40,15 @@ namespace BackupRestoreSqlServer
             this.Close();
         }
 
-        private void frmDangNhap_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            DialogResult dr = MessageBox.Show("Bạn có chắc muốn thoát chương trình", "", MessageBoxButtons.YesNo);
-            if (dr == DialogResult.Yes)
-            {
-                Application.ExitThread();
-            }
-            else e.Cancel = true;
-        }
-
         private void btnThoat_Click(object sender, EventArgs e)
         {
-            DialogResult dr = MessageBox.Show("Bạn có chắc muốn thoát chương trình", "", MessageBoxButtons.YesNo);
-            if (dr == DialogResult.Yes)
+            if (MessageBox.Show("Bạn có chắc muốn thoát chương trình", "", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
                 Application.ExitThread();
             }
         }
 
-        private void FormLogin_Load(object sender, EventArgs e)
+        private void FormDangNhap_Load(object sender, EventArgs e)
         {
             textServerName.Text = Program.servername;
             txUsername.Text = Program.mlogin;

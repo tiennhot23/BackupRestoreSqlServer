@@ -3,10 +3,12 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.SqlClient;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -14,8 +16,7 @@ namespace BackupRestoreSqlServer
 {
     public partial class FormMain : DevExpress.XtraEditors.XtraForm
     {
-        private String tenDevice;
-        private int banSaoLuu = 0;
+        private int backupVer = 0;
         public FormMain()
         {
             InitializeComponent();
@@ -23,87 +24,55 @@ namespace BackupRestoreSqlServer
 
         private void FormMain_Load(object sender, EventArgs e)
         {
-            // TODO: This line of code loads data into the 'dS.backup_devices' table. You can move, or remove it, as needed.
-            this.tbAdapterBackupDevice.Fill(this.dS.backup_devices);
+            init();
+            
+        }
 
-            // TODO: This line of code loads data into the 'dS.databases' table. You can move, or remove it, as needed.
+        private void init()
+        {
             this.databasesTableAdapter.Connection.ConnectionString = Program.connstr;
             this.databasesTableAdapter.Fill(this.dS.databases);
-
             this.tbAdapterBackupDevice.Connection.ConnectionString = Program.connstr;
             this.tbAdapterBackupDevice.Fill(this.dS.backup_devices);
 
-            Program.databaseName = ((DataRowView)this.bdsDatabases.Current).Row["name"].ToString();
-            this.tbAdapterSttBackup.Fill(this.dS.SP_STT_BACKUP, Program.databaseName);
+            onDatabaseClick();
 
-            bdsDatabases.Position = 0;
-
-            databasesGridControl_Click(sender, e);
             dateStop.DateTime = DateTime.Now.Date;
             timeStop.Time = DateTime.Now;
 
-            // Hide views
-            progress.Visible = false;
-            gcDatetime.Visible = cbDelAll.Checked = false;
-
-            // show hide view
-            lbTenDatabase.Text = ((DataRowView)this.bdsDatabases.Current).Row["name"].ToString();
-            CheckDeviceExist();
+            progressBar.Visible = groupDatetime.Visible = cbDelAll.Checked = false;
         }
 
-        private void btnSaoLuu_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
+        private void btnBackup_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
         {
-            if (lbTenDatabase.Text.Trim() == "" || tenDevice == "") return;
-            String strBackup = "BACKUP DATABASE " + lbTenDatabase.Text.Trim() + " TO " + tenDevice;
+            if (Program.databaseName == "" || Program.deviceName == "") return;
+
+            String strBackup = "BACKUP DATABASE " + Program.databaseName + " TO " + Program.deviceName;
             if (cbDelAll.Checked == true)
                 if (MessageBox.Show("Bạn có chắc chắn muốn xóa các bản sao lưu cũ", "Xác nhận", MessageBoxButtons.OKCancel) == DialogResult.OK)
-                    strBackup = strBackup + " WITH INIT";
+                    strBackup = strBackup + " WITH INIT ";
                 else return;
-            int err = Program.ExecSqlNonQuery(strBackup, "");
-            if (err != 0)
+
+            startProgressBar();
+            if (Program.ExecSqlNonQuery(strBackup, "") != 0)
             {
-                MessageBox.Show("Lỗi kết nối cơ sở dữ liệu " + lbTenDatabase.Text.Trim());
+                endProgressBar();
+                MessageBox.Show("Lỗi kết nối cơ sở dữ liệu " + Program.databaseName);
                 return;
-            }
-            progress.Visible = true;
-            for (int i = this.progress.Minimum; i <= this.progress.Maximum; i++)
-                progress.Value = i;
-            progress.Visible = false;
+            } else endProgressBar();
             cbDelAll.Checked = false;
             MessageBox.Show("Đã sao lưu cơ sở dữ liệu!");
-            //Tải lại các bản sao lưu, gồm cả bản vừa mới sao lưu
-            LoadCacBanSaoLuu();
-        }
+            onDatabaseClick();
+        }    
 
-        private void LoadCacBanSaoLuu()
-        {
-            if (lbTenDatabase.Text.Trim() == "") return;
-            try
-            {
-                Program.databaseName = ((DataRowView)this.bdsDatabases.Current).Row["name"].ToString();
-                this.tbAdapterSttBackup.Connection.ConnectionString = Program.connstr;
-                this.tbAdapterSttBackup.Fill(this.dS.SP_STT_BACKUP, Program.databaseName);
-                lbTenDatabase.Text = Program.databaseName;
-
-                if (bdsSPSttBackup.Count == 0) banSaoLuu = 0;
-                else banSaoLuu = int.Parse(((DataRowView)bdsSPSttBackup[0])["position"].ToString());
-
-                lbSoBanSaoLuu.Text = banSaoLuu.ToString();
-            }
-            catch (System.Exception ex)
-            {
-                System.Windows.Forms.MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void btnPhucHoi_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
+        private void btnRestore_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
         {
             if (this.bdsSPSttBackup.Count == 0)
             {
                 MessageBox.Show("Chưa có bản sao lưu để phục hồi", "", MessageBoxButtons.OK);
                 return;
             }
-            if (banSaoLuu == 0)
+            if (backupVer == 0)
             {
                 MessageBox.Show("Chưa chọn một bản sao lưu để phục hồi", "", MessageBoxButtons.OK);
                 return;
@@ -111,171 +80,96 @@ namespace BackupRestoreSqlServer
             if (Program.conn != null && Program.conn.State == ConnectionState.Open)
                 Program.conn.Close(); // đóng kết nối
 
-            if (lbTenDatabase.Text.Trim() == "" || tenDevice == "") return;
-            int i = this.progress.Minimum;
-            // Phục hồi về thời điểm đã sao lưu
-            if (cbThamSoTheoTg.Checked == false)
-            {
-                String strRestore = "ALTER DATABASE " + lbTenDatabase.Text.Trim()
-                    + " SET SINGLE_USER WITH ROLLBACK IMMEDIATE " +
-                    " USE tempdb RESTORE DATABASE " + lbTenDatabase.Text.Trim()
-                    + " FROM   " + tenDevice + " WITH FILE =  " + banSaoLuu + ", REPLACE "
-                    + "ALTER DATABASE  " + lbTenDatabase.Text.Trim() + " SET MULTI_USER";
+            if (Program.databaseName == "" || Program.deviceName == "") return;
 
-                if (MessageBox.Show("Bạn có chắc chắn muốn phục hồi database " + Program.databaseName + " về file " + banSaoLuu + "?"
+
+            if (cbTime.Checked == false)
+            {
+                String strRestore = "ALTER DATABASE " + Program.databaseName
+                    + " SET SINGLE_USER WITH ROLLBACK IMMEDIATE " +
+                    " USE TEMPDB \n"
+                    + " RESTORE DATABASE " + Program.databaseName
+                    + " FROM   " + Program.deviceName + " WITH FILE =  " + backupVer + ", REPLACE "
+                    + " ALTER DATABASE  " + Program.databaseName + " SET MULTI_USER";
+
+                if (MessageBox.Show("Bạn có chắc chắn muốn phục hồi database " + Program.databaseName + " về bản backup thứ " + backupVer + "?"
                   , "Cảnh báo", MessageBoxButtons.OKCancel) == DialogResult.OK)
                 {
-                    // Show  progressbar
-                    progress.Visible = true;
-                    for (; i <= this.progress.Maximum / 4; i++)
-                        progress.Value = i;
-
-                    int err = Program.ExecSqlNonQuery(strRestore, "Lỗi phục hồi cơ sở dữ liệu.");
-                    if (err == 0)
+                    startProgressBar();
+                    
+                    if (Program.ExecSqlNonQuery(strRestore, "Lỗi phục hồi cơ sở dữ liệu.") == 0)
                     {
-                        progress.Visible = true;
-                        for (; i <= this.progress.Maximum; i++)
-                            progress.Value = i;
-                        progress.Visible = false;
+                        endProgressBar();
                         MessageBox.Show("Phục hồi dữ liệu thành công", "Thông báo", MessageBoxButtons.OK);
                     }
-                    else progress.Visible = false; return;
+                    else endProgressBar();
                 }
-                else progress.Visible = false; return;
             }
-            // Backup đên 1 thời gian người dùng nhập
             else
             {
-                // Ngày giờ stop at > thời điểm sao lưu và nhỏ hơn thời điểm hiện tại ít nhất 3p\
-                // Ngày giờ của bản backup được chọn
-                DateTime ngaygioBK = (DateTime)((DataRowView)bdsSPSttBackup[bdsSPSttBackup.Position])["backup_start_date"];
+                //Tự động chọn bản backup mới nhất
+                bdsSPSttBackup.Position = 0;
+                DateTime timeBackup = (DateTime)((DataRowView)bdsSPSttBackup[bdsSPSttBackup.Position])["backup_start_date"];
 
-                // ngày h của user nhập
-                String strThoiDiemStopAt = dateStop.DateTime.Year + "-" + dateStop.DateTime.Month + "-" + dateStop.DateTime.Day + " " +
-                    timeStop.Time.Hour + ":" + timeStop.Time.Minute + ":" + timeStop.Time.Second;
-
-                DateTime thoiDiemStopAt = DateTime.Now;
-
+                DateTime timeStopAt = DateTime.Now;
                 try
                 {
-                    // format Ngày giờ người dùng nhập
-                    thoiDiemStopAt = DateTime.Parse(strThoiDiemStopAt);
+                    // format lại Ngày giờ người dùng nhập
+                    timeStopAt = DateTime.Parse(dateStop.DateTime.Year + "-" + dateStop.DateTime.Month + "-" + dateStop.DateTime.Day + " " +
+                    timeStop.Time.Hour + ":" + timeStop.Time.Minute + ":" + timeStop.Time.Second);
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("lỗi convert ngày" + ex.Message, "", MessageBoxButtons.OK);
-                    progress.Visible = false;
+                    MessageBox.Show("Không thể xác định thời gian đã nhập" + ex.Message, "", MessageBoxButtons.OK);
+                    return;
                 }
+                Console.WriteLine(timeStopAt);
+                Console.WriteLine(timeBackup);
 
-                // Kiểm tra sau thời điểm hiện tại
-                if (thoiDiemStopAt > DateTime.Now)
+                if (timeStopAt > DateTime.Now.Subtract(new TimeSpan(0,1,0)))
                 {
-                    MessageBox.Show("Thời điểm muốn phục hồi phải trước thời điểm hiện tại", "", MessageBoxButtons.OK);
-                    progress.Visible = false;
+                    MessageBox.Show("Thời điểm muốn phục hồi phải trước thời điểm hiện tại ít nhất 1 phút", "", MessageBoxButtons.OK);
                     return;
                 }
 
-                //if (dateStop.DateTime.Date <= ngaygioBK.Date
-                //    || thoiDiemStopAt.TimeOfDay.Ticks < ngaygioBK.TimeOfDay.Ticks)
-                if (DateTime.Compare(thoiDiemStopAt, ngaygioBK) <= 0)
+                if (timeStopAt <= timeBackup)
                 {
-                    MessageBox.Show("Thời điểm muốn phục hồi phải sau thời điểm bản sao lưu đã chọn", "", MessageBoxButtons.OK);
-                    progress.Visible = false;
+                    MessageBox.Show("Thời điểm muốn phục hồi phải sau thời điểm bản sao lưu mới nhất", "", MessageBoxButtons.OK);
                     return;
                 }
 
-                // ban sao luu moi nhat
-                banSaoLuu = int.Parse(lbSoBanSaoLuu.Text.Trim());
-                if (MessageBox.Show("Bạn có chắc chắn muốn phục hồi database " + Program.databaseName + " về ngày " + thoiDiemStopAt + "?"
+                // backup mới nhất
+                backupVer = (int)((DataRowView)bdsSPSttBackup[bdsSPSttBackup.Position])["position"];
+                if (MessageBox.Show("Bạn có chắc chắn muốn phục hồi database " + Program.databaseName + " về thời điểm " + timeStopAt.ToString("dd/MM/yyyy hh:mm:ss tt") + "?"
                     , "Cảnh báo", MessageBoxButtons.OKCancel) == DialogResult.OK)
                 {
-                    try
+
+                    String strRestore = "ALTER DATABASE " + Program.databaseName + " SET SINGLE_USER WITH ROLLBACK IMMEDIATE \n"
+                            + " BACKUP LOG " + Program.databaseName + " TO DISK = '" + Program.defaultPath + "DEVICE_" + Program.databaseName + ".trn' WITH INIT, NORECOVERY; \n "
+                            + " USE TEMPDB \n"
+                            + " RESTORE DATABASE " + Program.databaseName + " FROM  DEVICE_" + Program.databaseName + " WITH FILE =" + backupVer + ", NORECOVERY; \n"
+                            + " RESTORE DATABASE " + Program.databaseName + " FROM DISK = '" + Program.defaultPath + "DEVICE_" + Program.databaseName + ".trn' WITH STOPAT= '" + timeStopAt + "' \n"
+                            + " ALTER DATABASE  " + Program.databaseName + " SET MULTI_USER ";
+                    startProgressBar();
+                    if (Program.ExecSqlNonQuery(strRestore, "Lỗi phục hồi cơ sở dữ liệu.") == 0)
                     {
-                        // Restore về 1 thời điểm người dùng nhập
-                        String strRestore = "ALTER DATABASE " + lbTenDatabase.Text.Trim() + " SET SINGLE_USER WITH ROLLBACK IMMEDIATE \n" +
-                               " BACKUP LOG " + Program.databaseName + " TO DISK = '" + Program.defaultPath + "DEVICE_" + Program.databaseName + ".trn' WITH INIT, NORECOVERY; \n " +
-                               " USE tempdb \n" +
-                               " RESTORE DATABASE " + Program.databaseName + " FROM  DEVICE_" + Program.databaseName + " WITH FILE =" + banSaoLuu + ", NORECOVERY; \n" +
-                               " RESTORE DATABASE " + Program.databaseName + " FROM DISK = '" + Program.defaultPath + "DEVICE_" + Program.databaseName + ".trn' " +
-                               " WITH STOPAT= '" + thoiDiemStopAt + "' \n" +
-                               " ALTER DATABASE  " + Program.databaseName + " SET MULTI_USER ";
-                        MessageBox.Show(strRestore);
-                        int err = Program.ExecSqlNonQuery(strRestore, "Lỗi phục hồi cơ sở dữ liệu.");
-                        if (err == 0)
-                        {
-                            progress.Visible = true;
-                            for (; i <= this.progress.Maximum; i++)
-                                progress.Value = i;
-                            progress.Visible = false;
-                            MessageBox.Show("Phục hồi dữ liệu thành công", "Thông báo", MessageBoxButtons.OK);
-                        }
-                        else progress.Visible = false; return;
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show("Lỗi Restore:\n" + ex, "Xảy ra lỗi", MessageBoxButtons.OK);
-                    }
-                }
-                else
-                {
-                    progress.Visible = false;
+                        endProgressBar();
+                        MessageBox.Show("Phục hồi dữ liệu thành công", "Thông báo", MessageBoxButtons.OK);
+                    } 
+                    else endProgressBar();
                 }
             }
         }
 
-        private void cbThamSoTheoTg_CheckedChanged(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
+        private void cbTime_CheckedChanged(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
         {
-            if (cbThamSoTheoTg.Checked == true) gcDatetime.Visible = true;
-            else gcDatetime.Visible = false;
-        }
-
-        private void ShowCreateDevice()
-        {
-            btnSaoLuu.Enabled = btnPhucHoi.Enabled = cbThamSoTheoTg.Enabled = false;
-            btnTaoDeviceSaoLuu.Enabled = btnThoat.Enabled = true;
-        }
-
-        private void HideCreateDevice()
-        {
-            btnSaoLuu.Enabled = btnPhucHoi.Enabled = cbThamSoTheoTg.Enabled = btnThoat.Enabled = true;
-            btnTaoDeviceSaoLuu.Enabled = false;
-        }
-
-
-        // Check device exist? 
-        private void CheckDeviceExist()
-        {
-            String strTenDevice = "select  COUNT(name) from  sys.backup_devices WHERE name = N'DEVICE_"
-               + lbTenDatabase.Text.Trim() + "'";
-
-            Program.myReader = Program.ExecSqlDataReader(strTenDevice);
-            if (Program.myReader == null) return;
-
-            Program.myReader.Read();
-
-            //Nếu đã có device, hiện các button khác, ẩn button tạo device đi
-            if (Program.myReader.GetInt32(0) > 0)
-            {
-                HideCreateDevice();
-                tenDevice = "DEVICE_" + lbTenDatabase.Text.Trim();
-            }
-            //Nếu chưa có device, ẩn các button khác, chỉ hiện button device và button thoát
-            else ShowCreateDevice();
-            Program.myReader.Close();
-
+            if (cbTime.Checked == true) groupDatetime.Visible = true;
+            else groupDatetime.Visible = false;
         }
 
         private void databasesGridControl_Click(object sender, EventArgs e)
         {
-            Program.databaseName = ((DataRowView)this.bdsDatabases.Current).Row["name"].ToString();
-            this.tbAdapterSttBackup.Fill(this.dS.SP_STT_BACKUP, Program.databaseName);
-            lbTenDatabase.Text = Program.databaseName;
-
-            if (bdsSPSttBackup.Count == 0) banSaoLuu = 0;
-            else banSaoLuu = int.Parse(((DataRowView)bdsSPSttBackup[0])["position"].ToString());
-            lbSoBanSaoLuu.Text = banSaoLuu.ToString();
-
-            CheckDeviceExist();
+            onDatabaseClick();
         }
 
         private void btnThoat_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
@@ -287,20 +181,9 @@ namespace BackupRestoreSqlServer
             }
         }
 
-        private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
+        private void btnLogout_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
         {
-            DialogResult dr = MessageBox.Show("Bạn có chắc muốn thoát chương trình", "", MessageBoxButtons.YesNo);
-            if (dr == DialogResult.Yes)
-            {
-                Application.ExitThread();
-            }
-            else e.Cancel = true;
-        }
-
-        private void btnDangXuat_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
-        {
-            DialogResult dr = MessageBox.Show("Bạn có chắc muốn đăng xuất không?", "", MessageBoxButtons.YesNo);
-            if (dr == DialogResult.Yes)
+            if (MessageBox.Show("Bạn có chắc muốn đăng xuất không?", "", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
                 Program.mlogin = "";
                 Program.password = "";
@@ -313,7 +196,7 @@ namespace BackupRestoreSqlServer
             else return;
         }
 
-        private void btnXoaBackup_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
+        private void btnDelBackup_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
         {
             if (bdsSPSttBackup.Count == 0)
             {
@@ -334,68 +217,180 @@ namespace BackupRestoreSqlServer
             }
         }
 
-        private void TaoDevice()
+        
+
+        private void btnCreateBackupDevice_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
         {
-            // Lưu trên disk
-            String strTaoDevice = "EXEC sp_addumpdevice 'disk', 'DEVICE_" + lbTenDatabase.Text.Trim() + "', " +
-                "'" + Program.defaultPath + "DEVICE_" + lbTenDatabase.Text.Trim() + ".bak' ";
-
-            int err = Program.ExecSqlNonQuery(strTaoDevice, "Lỗi tạo device.");
-            if (err == 0)
-            {
-                progress.Visible = true;
-                for (int i = progress.Minimum; i <= this.progress.Maximum; i++)
-                    progress.Value = i;
-                progress.Visible = false;
-                tenDevice = "DEVICE_" + lbTenDatabase.Text.Trim();
-
-                // Show message diaglog create device successfull
-                MessageBox.Show("Tạo device thành công!", "Thông báo", MessageBoxButtons.OK);
-                HideCreateDevice();
-            }
-            else
-            {
-                ShowCreateDevice();
-                progress.Visible = false; return;
-            }
-        }
-
-        private void btnTaoDeviceSaoLuu_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
-        {
-            //Check folder default
-            // if exist 
+            // kiểm tra đường dẫn lưu file backup mặc định có tồn tại chưa
             if (Directory.Exists(Program.defaultPath) == true)
             {
                 TaoDevice();
             }
-            // If doesn't exist --> allow user choose a path to create device
             else
             {
-                OpenFileDialog folderBrowser = new OpenFileDialog();
-                // Set validate names and check file exists to false otherwise windows will
-                // not let you select "Folder Selection."
-                folderBrowser.ValidateNames = false;
-                folderBrowser.CheckFileExists = false;
-                folderBrowser.CheckPathExists = true;
-                // Always default to Folder Selection.
-                folderBrowser.FileName = "Folder Selection.";
-                if (folderBrowser.ShowDialog() == DialogResult.OK)
+                FolderBrowserDialog browserDialog = new FolderBrowserDialog();
+                browserDialog.RootFolder = Environment.SpecialFolder.MyComputer;
+                DialogResult result = browserDialog.ShowDialog();
+
+                if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(browserDialog.SelectedPath))
                 {
-                    string folderPath = Path.GetDirectoryName(folderBrowser.FileName);
-                    Program.defaultPath = folderPath + "\\";
+                    // đường dẫn từ desktop bị fail
+                    Program.defaultPath = browserDialog.SelectedPath.Replace('\\', '/') + "/";                    
                     TaoDevice();
                 }
-
             }
         }
 
-        private void sP_STT_BACKUPGridControl_Click(object sender, EventArgs e)
+        private void TaoDevice()
         {
-            if (bdsSPSttBackup.Count > 0) banSaoLuu = int.Parse(((DataRowView)bdsSPSttBackup.Current)["position"].ToString());
-            else banSaoLuu = 0;
-            lbSoBanSaoLuu.Text = banSaoLuu.ToString();
+            Console.WriteLine(Program.defaultPath);
+            String strTaoDevice = "EXEC sp_addumpdevice 'disk', 'DEVICE_" + Program.databaseName + "', " +
+                "'" + Program.defaultPath + "DEVICE_" + Program.databaseName + ".bak' ";
+            startProgressBar();
+            if (Program.ExecSqlNonQuery(strTaoDevice, "Lỗi tạo device.") == 0)
+            {
+                endProgressBar();
+                Program.deviceName = "DEVICE_" + Program.databaseName;
+                MessageBox.Show("Tạo device thành công!", "Thông báo", MessageBoxButtons.OK);
+                HideButtonCreateBackupDevice();
+            }
+            else
+            {
+                endProgressBar();
+                ShowButtonCreateBackupDevice();
+            }
         }
 
-        
+        private void STTBACKUPGridControl_Click(object sender, EventArgs e)
+        {
+            if (bdsSPSttBackup.Count > 0) backupVer = int.Parse(((DataRowView)bdsSPSttBackup.Current)["position"].ToString());
+            else backupVer = 0;
+            lblBackupNum.Text = backupVer.ToString();
+        }
+
+        private void onDatabaseClick()
+        {
+            if (bdsDatabases.Count > 0)
+            {
+                Program.databaseName = ((DataRowView)this.bdsDatabases.Current).Row["name"].ToString();
+                this.tbAdapterSttBackup.Connection.ConnectionString = Program.connstr;
+                this.tbAdapterSttBackup.Fill(this.dS.SP_STT_BACKUP, Program.databaseName);
+                lblDatabaseName.Text = Program.databaseName;
+
+                if (bdsSPSttBackup.Count == 0) backupVer = 0;
+                else backupVer = int.Parse(((DataRowView)bdsSPSttBackup[0])["position"].ToString());
+                lblBackupNum.Text = backupVer.ToString();
+
+                isBackupDeviceExisted();
+            }
+            else
+            {
+                ShowButtonCreateBackupDevice();
+                btnCreateBackupDevice.Enabled = false;
+            }
+        }
+
+        private void isBackupDeviceExisted()
+        {
+            String strDeviceName = "select  COUNT(name) from  sys.backup_devices WHERE name = N'DEVICE_"
+               + Program.databaseName + "'";
+
+            Program.myReader = Program.ExecSqlDataReader(strDeviceName);
+            if (Program.myReader == null) return;
+
+            Program.myReader.Read();
+
+            if (Program.myReader.GetInt32(0) > 0)
+            {
+                HideButtonCreateBackupDevice();
+                Program.deviceName = "DEVICE_" + Program.databaseName;
+            }
+            else ShowButtonCreateBackupDevice();
+            Program.myReader.Close();
+
+        }
+
+        private void ShowButtonCreateBackupDevice()
+        {
+            btnBackup.Enabled = btnRestore.Enabled = cbTime.Enabled = false;
+            btnCreateBackupDevice.Enabled = btnThoat.Enabled = true;
+        }
+
+        private void HideButtonCreateBackupDevice()
+        {
+            btnBackup.Enabled = btnRestore.Enabled = cbTime.Enabled = btnThoat.Enabled = true;
+            btnCreateBackupDevice.Enabled = false;
+        }
+
+        private void startProgressBar()
+        {
+            progressBar.Visible = true;
+            disableViewWhenInProgress();
+            // backgroundWorker1.RunWorkerAsync();
+            progressBar.Visible = true;
+            for (int i = progressBar.Minimum; i < this.progressBar.Maximum; i++)
+            {
+                if (i % 10 == 0) Thread.Sleep(200);
+                progressBar.Value = i;
+            }
+        }
+
+        private void endProgressBar()
+        {
+            // backgroundWorker1.CancelAsync();
+            enableViewWhenProgressComplete();
+            progressBar.Visible = false;
+        }
+
+        private void disableViewWhenInProgress()
+        {
+            databasesGridControl.Enabled = STTBACKUPGridControl.Enabled = groupDatetime.Enabled =
+                btnBackup.Enabled = btnRestore.Enabled = btnLogout.Enabled = btnThoat.Enabled =
+                btnCreateBackupDevice.Enabled = btnDelBackup.Enabled = cbTime.Enabled = false;
+        }
+
+        private void enableViewWhenProgressComplete()
+        {
+            databasesGridControl.Enabled = STTBACKUPGridControl.Enabled = groupDatetime.Enabled = btnLogout.Enabled = true;
+            isBackupDeviceExisted();
+        }
+
+
+
+
+
+
+
+
+
+
+
+        private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
+        {
+            for (int i = 1; i < 100; i += 1)
+            {
+                if (backgroundWorker1.CancellationPending)
+                {
+                    e.Cancel = true;
+                } 
+                else
+                {
+                    Thread.Sleep(100);
+                    backgroundWorker1.ReportProgress(i);
+                }
+            }
+        }
+
+        private void backgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            progressBar.Value = e.ProgressPercentage;
+
+        }
+
+        private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            progressBar.Visible = false;
+        }
+
     }
 }
