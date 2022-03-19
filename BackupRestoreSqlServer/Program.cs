@@ -28,7 +28,7 @@ namespace BackupRestoreSqlServer
         // sao cho khi đổi máy vẫn có thể chạy được
         // Mặc định sẽ mở đường dẫn này, khi tạo device kiểm tra đường dẫn có tồn tại hay không
         // Nếu tồn tại thì lưu trong đường dẫn,  ngược lại mở folder cho người dùng chọn đường dẫn để lưu
-        public static String defaultPath = "E:/Chuyen_de_cnpm_backup-restore/BackupRestoreSqlServer/Backup_Restore_DB/";
+        public static String defaultPath = "E:/VisualStudio-workspace/Chuyen_de_cnpm_backup-restore/BackupRestoreSqlServer/Backup_Restore_DB/";
 
         public static int KetNoi()
         {

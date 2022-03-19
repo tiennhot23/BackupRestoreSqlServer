@@ -328,7 +328,7 @@ namespace BackupRestoreSqlServer
             disableViewWhenInProgress();
             // backgroundWorker1.RunWorkerAsync();
             progressBar.Visible = true;
-            for (int i = progressBar.Minimum; i < this.progressBar.Maximum; i++)
+            for (int i = progressBar.Minimum; i < 70; i++)
             {
                 if (i % 10 == 0) Thread.Sleep(200);
                 progressBar.Value = i;
@@ -337,6 +337,11 @@ namespace BackupRestoreSqlServer
 
         private void endProgressBar()
         {
+            for (int i = 70; i <= this.progressBar.Maximum; i++)
+            {
+                if (i % 10 == 0) Thread.Sleep(200);
+                progressBar.Value = i;
+            }
             // backgroundWorker1.CancelAsync();
             enableViewWhenProgressComplete();
             progressBar.Visible = false;
