@@ -68,6 +68,7 @@ namespace BackupRestoreSqlServer
             this.STTBACKUPGridControl = new DevExpress.XtraGrid.GridControl();
             this.bdsSPSttBackup = new System.Windows.Forms.BindingSource(this.components);
             this.gridView2 = new DevExpress.XtraGrid.Views.Grid.GridView();
+            this.gridColumn1 = new DevExpress.XtraGrid.Columns.GridColumn();
             this.colposition = new DevExpress.XtraGrid.Columns.GridColumn();
             this.colname1 = new DevExpress.XtraGrid.Columns.GridColumn();
             this.colbackup_start_date = new DevExpress.XtraGrid.Columns.GridColumn();
@@ -171,7 +172,6 @@ namespace BackupRestoreSqlServer
             // btnDelBackup
             // 
             this.btnDelBackup.Caption = "Xóa backup";
-            this.btnDelBackup.Enabled = false;
             this.btnDelBackup.Id = 6;
             this.btnDelBackup.Name = "btnDelBackup";
             this.btnDelBackup.ItemClick += new DevExpress.XtraBars.ItemClickEventHandler(this.btnDelBackup_ItemClick);
@@ -441,6 +441,7 @@ namespace BackupRestoreSqlServer
             // gridView2
             // 
             this.gridView2.Columns.AddRange(new DevExpress.XtraGrid.Columns.GridColumn[] {
+            this.gridColumn1,
             this.colposition,
             this.colname1,
             this.colbackup_start_date,
@@ -448,6 +449,12 @@ namespace BackupRestoreSqlServer
             this.gridView2.GridControl = this.STTBACKUPGridControl;
             this.gridView2.Name = "gridView2";
             this.gridView2.OptionsBehavior.Editable = false;
+            // 
+            // gridColumn1
+            // 
+            this.gridColumn1.Caption = "backup_set_id";
+            this.gridColumn1.FieldName = "backup_set_id";
+            this.gridColumn1.Name = "gridColumn1";
             // 
             // colposition
             // 
@@ -604,5 +611,6 @@ namespace BackupRestoreSqlServer
         private DevExpress.Utils.Behaviors.BehaviorManager behaviorManager1;
         public System.ComponentModel.BackgroundWorker doSqlWork;
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private DevExpress.XtraGrid.Columns.GridColumn gridColumn1;
     }
 }

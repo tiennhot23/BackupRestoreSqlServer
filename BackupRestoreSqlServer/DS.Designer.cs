@@ -631,6 +631,8 @@ namespace BackupRestoreSqlServer {
             
             private global::System.Data.DataColumn columnuser_name;
             
+            private global::System.Data.DataColumn columnbackup_set_id;
+            
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "16.0.0.0")]
             public SP_STT_BACKUPDataTable() {
@@ -698,6 +700,14 @@ namespace BackupRestoreSqlServer {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "16.0.0.0")]
+            public global::System.Data.DataColumn backup_set_idColumn {
+                get {
+                    return this.columnbackup_set_id;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "16.0.0.0")]
             [global::System.ComponentModel.Browsable(false)]
             public int Count {
                 get {
@@ -739,10 +749,18 @@ namespace BackupRestoreSqlServer {
                         position,
                         name,
                         backup_start_date,
-                        user_name};
+                        user_name,
+                        null};
                 rowSP_STT_BACKUPRow.ItemArray = columnValuesArray;
                 this.Rows.Add(rowSP_STT_BACKUPRow);
                 return rowSP_STT_BACKUPRow;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "16.0.0.0")]
+            public SP_STT_BACKUPRow FindBybackup_set_id(int backup_set_id) {
+                return ((SP_STT_BACKUPRow)(this.Rows.Find(new object[] {
+                            backup_set_id})));
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -766,6 +784,7 @@ namespace BackupRestoreSqlServer {
                 this.columnname = base.Columns["name"];
                 this.columnbackup_start_date = base.Columns["backup_start_date"];
                 this.columnuser_name = base.Columns["user_name"];
+                this.columnbackup_set_id = base.Columns["backup_set_id"];
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -779,8 +798,18 @@ namespace BackupRestoreSqlServer {
                 base.Columns.Add(this.columnbackup_start_date);
                 this.columnuser_name = new global::System.Data.DataColumn("user_name", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnuser_name);
+                this.columnbackup_set_id = new global::System.Data.DataColumn("backup_set_id", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnbackup_set_id);
+                this.Constraints.Add(new global::System.Data.UniqueConstraint("Constraint1", new global::System.Data.DataColumn[] {
+                                this.columnbackup_set_id}, true));
                 this.columnname.MaxLength = 128;
                 this.columnuser_name.MaxLength = 128;
+                this.columnbackup_set_id.AutoIncrement = true;
+                this.columnbackup_set_id.AutoIncrementSeed = -1;
+                this.columnbackup_set_id.AutoIncrementStep = -1;
+                this.columnbackup_set_id.AllowDBNull = false;
+                this.columnbackup_set_id.ReadOnly = true;
+                this.columnbackup_set_id.Unique = true;
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -1273,6 +1302,17 @@ namespace BackupRestoreSqlServer {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "16.0.0.0")]
+            public int backup_set_id {
+                get {
+                    return ((int)(this[this.tableSP_STT_BACKUP.backup_set_idColumn]));
+                }
+                set {
+                    this[this.tableSP_STT_BACKUP.backup_set_idColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "16.0.0.0")]
             public bool IspositionNull() {
                 return this.IsNull(this.tableSP_STT_BACKUP.positionColumn);
             }
@@ -1746,6 +1786,7 @@ namespace BackupRestoreSqlServer.DSTableAdapters {
             tableMapping.ColumnMappings.Add("name", "name");
             tableMapping.ColumnMappings.Add("backup_start_date", "backup_start_date");
             tableMapping.ColumnMappings.Add("user_name", "user_name");
+            tableMapping.ColumnMappings.Add("backup_set_id", "backup_set_id");
             this._adapter.TableMappings.Add(tableMapping);
         }
         
@@ -1762,7 +1803,7 @@ namespace BackupRestoreSqlServer.DSTableAdapters {
             this._commandCollection = new global::System.Data.SqlClient.SqlCommand[1];
             this._commandCollection[0] = new global::System.Data.SqlClient.SqlCommand();
             this._commandCollection[0].Connection = this.Connection;
-            this._commandCollection[0].CommandText = @"SELECT     position, name, backup_start_date , user_name FROM  msdb.dbo.backupset 
+            this._commandCollection[0].CommandText = @"SELECT    backup_set_id, position, name, backup_start_date , user_name FROM  msdb.dbo.backupset 
    WHERE     database_name =@DBNAME AND type='D' AND 
      backup_set_id >= 
         (  SELECT  MAX(backup_set_id) 

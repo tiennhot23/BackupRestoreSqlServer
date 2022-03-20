@@ -109,6 +109,7 @@ namespace BackupRestoreSqlServer
             {
                 //Tự động chọn bản backup mới nhất
                 bdsSPSttBackup.Position = 0;
+                lblBackupNum.Text = ((DataRowView)bdsSPSttBackup[bdsSPSttBackup.Position])["position"].ToString();
                 DateTime timeBackup = (DateTime)((DataRowView)bdsSPSttBackup[bdsSPSttBackup.Position])["backup_start_date"];
 
                 DateTime timeStopAt = DateTime.Now;
@@ -200,20 +201,33 @@ namespace BackupRestoreSqlServer
         {
             if (bdsSPSttBackup.Count == 0)
             {
-                MessageBox.Show("Không có bản backup nào để xóa!", "THÔNG BÁO", MessageBoxButtons.OK);
+                MessageBox.Show("Không có bản sao lưu nào để xóa!", "THÔNG BÁO", MessageBoxButtons.OK);
                 return;
             }
-
-            if (MessageBox.Show("Bạn có chắc chắn muốn xóa bản backup " + ((DataRowView)this.bdsSPSttBackup.Current).Row["name"].ToString() + "?", "", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            if (backupVer == 0)
             {
-                try
-                {
+                MessageBox.Show("Chưa chọn một bản sao lưu để xóa", "", MessageBoxButtons.OK);
+                return;
+            }
+            if (Program.conn != null && Program.conn.State == ConnectionState.Open)
+                Program.conn.Close(); // đóng kết nối
 
-                }
-                catch (Exception ex)
+            if (Program.databaseName == "" || Program.deviceName == "") return;
+
+
+            String strDel = "EXEC MSDB.DBO.SP_DELETE_SINGLE_BACKUP " + ((DataRowView)bdsSPSttBackup[bdsSPSttBackup.Position])["backup_set_id"];
+            if (MessageBox.Show("Bạn có chắc chắn muốn xóa bản backup thứ " + backupVer + "?", "",
+                MessageBoxButtons.YesNo) == DialogResult.Yes)
+            {
+                startProgressBar();
+
+                if (Program.ExecSqlNonQuery(strDel, "Lỗi xóa backup.") == 0)
                 {
-                    MessageBox.Show("Lỗi: " + ex.Message, "", MessageBoxButtons.OK);
+                    endProgressBar();
+                    MessageBox.Show("Xóa backup thành công thành công", "Thông báo", MessageBoxButtons.OK);
+                    onDatabaseClick();
                 }
+                else endProgressBar();
             }
         }
 
@@ -312,13 +326,13 @@ namespace BackupRestoreSqlServer
 
         private void ShowButtonCreateBackupDevice()
         {
-            btnBackup.Enabled = btnRestore.Enabled = cbTime.Enabled = false;
+            btnBackup.Enabled = btnRestore.Enabled = cbTime.Enabled = btnDelBackup.Enabled = false;
             btnCreateBackupDevice.Enabled = btnThoat.Enabled = true;
         }
 
         private void HideButtonCreateBackupDevice()
         {
-            btnBackup.Enabled = btnRestore.Enabled = cbTime.Enabled = btnThoat.Enabled = true;
+            btnBackup.Enabled = btnRestore.Enabled = cbTime.Enabled = btnThoat.Enabled = btnDelBackup.Enabled = true;
             btnCreateBackupDevice.Enabled = false;
         }
 
